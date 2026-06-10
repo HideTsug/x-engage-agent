@@ -1,0 +1,21 @@
+# Secrets — never commit (set on the fork side)
+.env
+xmcp/.env
+
+# Local engagement data / caches (private follow-state, candidate history)
+improver/data/engagement/*
+!improver/data/engagement/.gitkeep
+
+# Logs
+*.log
+/tmp/xpost-logs/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+.pytest_cache/
+
+# OS
+.DS_Store

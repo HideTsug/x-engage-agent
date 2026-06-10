@@ -1,0 +1,5 @@
+# Engagement pipeline (fetch_following.py). The Chatwork notifier (notify.py)
+# uses only the standard library. xmcp has its own xmcp/requirements.txt.
+httpx
+python-dotenv
+oauthlib
