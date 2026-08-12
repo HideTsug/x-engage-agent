@@ -15,6 +15,7 @@ import requests
 from oauthlib.oauth1 import Client as OAuth1Client
 from requests_oauthlib import OAuth1Session
 from fastmcp import FastMCP
+from search_quota import SearchQuota, make_request_hook, quota_from_env, state_path_from_env
 
 HTTP_METHODS = {
     "get",
@@ -351,6 +352,13 @@ def print_oauth1_header_probe(oauth1_client: OAuth1Client, base_url: str) -> Non
 
 def create_mcp() -> FastMCP:
     load_env()
+    quota_value = quota_from_env()
+    quota = SearchQuota(state_path_from_env(), quota_value)
+    state = quota.initialize()
+    print(
+        f"search quota state: count={state['count']}/{quota_value} "
+        f"date={state['date']} path={quota.state_path}"
+    )
     debug_enabled = setup_logging()
     parser_flag = os.getenv("FASTMCP_EXPERIMENTAL_ENABLE_NEW_OPENAPI_PARSER")
     if parser_flag is not None:
@@ -453,7 +461,12 @@ def create_mcp() -> FastMCP:
         headers={},
         timeout=timeout,
         event_hooks={
-            "request": [normalize_query_params, sign_oauth1_request, log_request],
+            "request": [
+                make_request_hook(quota),
+                normalize_query_params,
+                sign_oauth1_request,
+                log_request,
+            ],
             "response": [log_response],
         },
     )
