@@ -82,6 +82,23 @@ Whitelisting is applied at startup when the OpenAPI spec is loaded, so restart
 the server after changes. See the full tool list below before building your
 allowlist.
 
+## Daily search quota (cost control)
+
+`searchPostsRecent` (`/2/tweets/search/recent`) is the dominant pay-per-use
+cost, so the server enforces a hard daily quota independent of what the agent
+prompt says. Once the budget is spent, further searches fail before any HTTP
+request is sent, with an error telling the agent not to retry.
+
+- `X_SEARCH_DAILY_QUOTA` — searches allowed per JST calendar day
+  (default `12`, matching the engager's segment allocation of
+  client 6 / peer 3 / recruit 3).
+- `X_SEARCH_QUOTA_STATE` — optional path for the JSON state file
+  (default `data/search_quota.json`, gitignored).
+
+The counter is fail-closed: a corrupt state file is quarantined and the day is
+treated as exhausted, and concurrent processes share the budget via a file
+lock. See `search_quota.py`.
+
 ## OAuth1 flow (startup behavior)
 
 On startup, the server opens a browser for OAuth1 consent and waits for the

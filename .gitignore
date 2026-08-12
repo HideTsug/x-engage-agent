@@ -2,6 +2,9 @@
 .env
 xmcp/.env
 
+# Runtime state (search quota counter)
+xmcp/data/
+
 # Local engagement data / caches (private follow-state, candidate history)
 improver/data/engagement/*
 !improver/data/engagement/.gitkeep
