@@ -7,7 +7,7 @@ day) and refuses further searches once the daily budget is spent.
 
 Concurrency and failure semantics:
 - The whole read -> reset -> check -> increment -> write section runs
-  under an fcntl.flock on a dedicated lock file, so threads and separate
+  under an OS-level lock on a dedicated lock file, so threads and separate
   processes cannot exceed the budget together.
 - Fail-closed everywhere: a corrupt state file is quarantined to
   *.corrupt and the day is marked exhausted; a failed write refuses the
@@ -16,7 +16,6 @@ Concurrency and failure semantics:
 
 from __future__ import annotations
 
-import fcntl
 import json
 import logging
 import os
@@ -26,6 +25,27 @@ from contextlib import contextmanager
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Callable, Iterator, Optional
+
+try:
+    import fcntl
+except ImportError:
+    import msvcrt
+
+    def _lock(fd: int) -> None:
+        os.lseek(fd, 0, os.SEEK_SET)
+        msvcrt.locking(fd, msvcrt.LK_LOCK, 1)
+
+    def _unlock(fd: int) -> None:
+        os.lseek(fd, 0, os.SEEK_SET)
+        msvcrt.locking(fd, msvcrt.LK_UNLCK, 1)
+
+else:
+
+    def _lock(fd: int) -> None:
+        fcntl.flock(fd, fcntl.LOCK_EX)
+
+    def _unlock(fd: int) -> None:
+        fcntl.flock(fd, fcntl.LOCK_UN)
 
 LOGGER = logging.getLogger("xmcp.search_quota")
 
@@ -110,11 +130,12 @@ class SearchQuota:
     def _locked(self) -> Iterator[None]:
         self.state_path.parent.mkdir(parents=True, exist_ok=True)
         with open(self.lock_path, "a+", encoding="utf-8") as lock_file:
-            fcntl.flock(lock_file.fileno(), fcntl.LOCK_EX)
+            fd = lock_file.fileno()
+            _lock(fd)
             try:
                 yield
             finally:
-                fcntl.flock(lock_file.fileno(), fcntl.LOCK_UN)
+                _unlock(fd)
 
     def _read_state(self) -> tuple[str, Optional[dict]]:
         try:

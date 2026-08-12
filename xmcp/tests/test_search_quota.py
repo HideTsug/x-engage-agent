@@ -9,6 +9,7 @@ from pathlib import Path
 
 import pytest
 
+import search_quota
 from search_quota import (
     DEFAULT_QUOTA,
     JST,
@@ -146,6 +147,11 @@ def test_write_failure_blocks_request(tmp_path, monkeypatch):
 
 
 # -- concurrency ---------------------------------------------------------------
+
+
+def test_lock_backend_exposes_callables():
+    assert callable(search_quota._lock)
+    assert callable(search_quota._unlock)
 
 
 def test_thread_exclusion_exactly_one_winner(tmp_path):
