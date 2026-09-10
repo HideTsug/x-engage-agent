@@ -1,0 +1,13 @@
+{
+  "$schema": "https://context7.com/schema/context7.json",
+  "projectTitle": "x-engage-agent",
+  "description": "Claude Code-driven X (Twitter) engagement assistant: searches and scores posts, builds like/follow candidate lists per target segment, and delivers them to Chatwork for manual action. Fork and set your own tokens.",
+  "folders": [],
+  "excludeFolders": ["node_modules", ".git", ".ralph"],
+  "excludeFiles": [],
+  "rules": [
+    "All tokens live in the forked repository's environment variables or .env; nothing is committed.",
+    "Likes and follows are manual by design because the X API self-serve tiers removed likePost and followUser.",
+    "Bundled templates target a tax-accounting firm with client, peer and recruit segments; adapt them to your own segments."
+  ]
+}
